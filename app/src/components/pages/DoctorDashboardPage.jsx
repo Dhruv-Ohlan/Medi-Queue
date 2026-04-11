@@ -120,11 +120,11 @@ const DoctorDashboardPage = () => {
     }
   }, [user]);
 
-  // Poll every 30s
+  // Poll every 3s for demo
   useEffect(() => {
     if (!user) return;
     fetchQueue();
-    pollRef.current = setInterval(fetchQueue, 30000);
+    pollRef.current = setInterval(fetchQueue, 3000);
     return () => clearInterval(pollRef.current);
   }, [user, fetchQueue]);
 

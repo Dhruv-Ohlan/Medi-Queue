@@ -18,7 +18,7 @@ const App = () => {
   const [activePage, setActivePage] = useState("landing");
 
   // Shared state: patient registration data flows Patient → Triage → Token
-  const [patientForm, setPatientForm] = useState({ name: "", age: "", gender: "", phone: "" });
+  const [patientForm, setPatientForm] = useState({ name: "Rahul Sharma", age: "32", gender: "Male", phone: "9876543210" });
   const [trackingId, setTrackingId] = useState(null);
  
   const PageComponent = PAGES[activePage] || HomePage;

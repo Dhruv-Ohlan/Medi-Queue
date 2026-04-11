@@ -92,7 +92,7 @@ const PatientPortalPage = ({ setActive, patientForm, setPatientForm, trackingId,
     };
 
     fetchStatus(); // initial fetch
-    pollRef.current = setInterval(fetchStatus, 30000);
+    pollRef.current = setInterval(fetchStatus, 3000);
 
     return () => clearInterval(pollRef.current);
   }, [step, trackingId]);

@@ -4,7 +4,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "seed:depts": "node src/seed/seedDepartments.js",
+    "seed:users": "node src/seed/seedUsers.js",
+    "seed:queue": "node src/seed/seedQueue.js",
+    "seed": "npm run seed:depts && npm run seed:users && npm run seed:queue"
   },
   "keywords": [],
   "author": "",
