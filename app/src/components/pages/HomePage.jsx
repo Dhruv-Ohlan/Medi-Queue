@@ -1,5 +1,11 @@
 import React from 'react';
-import { COLORS } from "../constants";
+
+// ── 1. CONSTANTS ──────────────────────────────────────────────────────
+const COLORS = {
+  navy: "#0a192f",
+  white: "#ffffff",
+  teal: "#00BFA6",
+};
 
 const STATS = [
   { n: "50M+", d: "OPD visits/month" },
@@ -9,12 +15,36 @@ const STATS = [
 ];
 
 const FEATURES = [
-  { icon: "📱", title: "Digital Token System",   desc: "Scan QR or open URL. Get a token instantly with live position tracking." },
-  { icon: "🤖", title: "AI Symptom Triage",      desc: "OpenAI-powered intake classifies urgency & routes you to the right department." },
-  { icon: "⚡", title: "Real-Time Queue",         desc: "Auto-refreshing queue for both patients and doctors. No hardware required." },
-  { icon: "📊", title: "Analytics Dashboard",    desc: "Cross-department load, triage breakdowns, and daily PDF reports for admins." },
-  { icon: "🔔", title: "SMS Notifications",      desc: "WhatsApp & SMS alerts when you're 5 tokens away via Twilio." },
-  { icon: "🏥", title: "Multi-Department",       desc: "General Medicine, Paediatrics, Orthopaedics — extensible via admin panel." },
+  { 
+    icon: "/5digitaltoken.jpeg", 
+    title: "Digital Token System",   
+    desc: "Scan QR or open URL. Get a token instantly with live position tracking." 
+  },
+  { 
+    icon: "/1aiicon.jpeg", 
+    title: "AI Symptom Triage",      
+    desc: "OpenAI-powered intake classifies urgency & routes you to the right department." 
+  },
+  { 
+    icon: "/6queueicon.jpeg", 
+    title: "Real-Time Queue",         
+    desc: "Auto-refreshing queue for both patients and doctors. No hardware required." 
+  },
+  { 
+    icon: "/2analyticicon.jpeg", 
+    title: "Analytics Dashboard",    
+    desc: "Cross-department load, triage breakdowns, and daily PDF reports for admins." 
+  },
+  { 
+    icon: "/4messageicon.jpeg", 
+    title: "SMS Notifications",      
+    desc: "WhatsApp & SMS alerts when you're 5 tokens away via Twilio." 
+  },
+  { 
+    icon: "/3departmenticon.jpeg", 
+    title: "Multi-Department",       
+    desc: "General Medicine, Paediatrics, Orthopaedics — extensible via admin panel." 
+  },
 ];
 
 const PROBLEMS = [
@@ -29,12 +59,12 @@ const HomePage = ({ setActive }) => {
     <div style={{ 
       minHeight: "100vh", 
       backgroundColor: COLORS.navy, 
-      fontFamily: "'Times New Roman', Times, serif", // Updated to professional serif
+      fontFamily: "'Times New Roman', Times, serif", 
       position: "relative", 
       overflowX: "hidden" 
     }}>
       
-      {/* ── RESPONSIVE STYLES (Inline Media Query Simulation) ── */}
+      {/* ── RESPONSIVE STYLES ── */}
       <style>
         {`
           @media (max-width: 768px) {
@@ -60,7 +90,7 @@ const HomePage = ({ setActive }) => {
           width: "100%",
           height: "100%", 
           backgroundImage: "url('/home.png')", 
-          backgroundSize: "cover", // Optimized for full screen
+          backgroundSize: "cover", 
           backgroundPosition: "center",
           zIndex: 0,
         }}
@@ -192,8 +222,12 @@ const HomePage = ({ setActive }) => {
             </div>
             <div className="grid-three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
               {FEATURES.map((f, i) => (
-                <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "32px 24px", transition: "transform 0.3s ease" }}>
-                  <div style={{ fontSize: 32, marginBottom: 16 }}>{f.icon}</div>
+                <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "32px 24px", transition: "transform 0.3s ease", textAlign: "center" }}>
+                  <img 
+                    src={f.icon} 
+                    alt={f.title} 
+                    style={{ width: "50px", height: "50px", marginBottom: 16, borderRadius: "8px", objectFit: "cover" }} 
+                  />
                   <div style={{ fontSize: 17, fontWeight: 700, color: COLORS.white, marginBottom: 10 }}>{f.title}</div>
                   <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>{f.desc}</div>
                 </div>
