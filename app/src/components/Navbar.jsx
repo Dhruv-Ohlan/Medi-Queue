@@ -1,6 +1,4 @@
 import React, { useState } from "react";
-// Assuming COLORS is defined as: { white: "#ffffff", teal: "#00BFA6", navy: "#0a192f" }
-import { COLORS } from "./constants";
 
 const NAV_LINKS = [
   { id: "landing", label: "Home" },
@@ -14,16 +12,21 @@ const Navbar = ({ active, setActive }) => {
   const [hovered, setHovered] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
 
+  // High-end Typography Pairing
+  const headingFont = "'Inter', sans-serif";
+
   return (
     <>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap" rel="stylesheet" />
+
       <style>{`
-        /* Mobile Menu Styling */
-        @media (max-width: 992px) {
+        /* Mobile Menu Logic */
+        @media (max-width: 1024px) {
           .nav-links-container {
             display: ${isOpen ? "flex" : "none"} !important;
             flex-direction: column !important;
             position: fixed !important;
-            top: 70px !important;
+            top: 60px !important; /* Matches new height */
             left: 0 !important;
             width: 100% !important;
             background: rgba(10, 25, 47, 0.98) !important;
@@ -36,17 +39,10 @@ const Navbar = ({ active, setActive }) => {
             width: 100%;
             text-align: left;
             padding: 15px 30px !important;
-            border-radius: 0 !important;
+            font-size: 16px !important;
           }
           .hamburger {
             display: flex !important;
-            order: 2; /* Forces it to the end */
-          }
-          .action-section {
-            display: none !important; /* Hide profile on mobile to keep it clean */
-          }
-          .logo-section {
-            flex: 1;
           }
         }
       `}</style>
@@ -58,36 +54,35 @@ const Navbar = ({ active, setActive }) => {
           left: 0,
           width: "100%",
           zIndex: 1000,
-          height: 70,
+          height: 60, // Smaller Navbar
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 30px",
+          padding: "0 40px",
           background: "rgba(10, 25, 47, 0.95)",
           backdropFilter: "blur(18px)",
           WebkitBackdropFilter: "blur(18px)",
           borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
-          boxShadow: "0 4px 30px rgba(0, 0, 0, 0.3)",
-          fontFamily: "'Times New Roman', Times, serif",
+          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
           boxSizing: "border-box"
         }}
       >
         {/* Logo Section */}
         <div 
-          className="logo-section"
-          style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}
+          style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
           onClick={() => { setActive("landing"); setIsOpen(false); }}
         >
           <div
             style={{
-              width: 32,
-              height: 32,
+              width: 30,
+              height: 30,
               borderRadius: "6px",
               background: "linear-gradient(135deg, #00BFA6 0%, #0077ff 100%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: "16px",
+              color: "#fff"
             }}
           >
             ⚕
@@ -95,16 +90,17 @@ const Navbar = ({ active, setActive }) => {
           <span
             style={{
               color: "#ffffff",
-              fontWeight: 700,
+              fontWeight: 800,
               fontSize: "20px",
-              letterSpacing: "0.5px",
+              letterSpacing: "-0.5px",
+              fontFamily: headingFont
             }}
           >
             Medi<span style={{ color: "#00BFA6" }}>Queue</span>
           </span>
         </div>
 
-        {/* Navigation Links (Desktop) */}
+        {/* Desktop Navigation Links */}
         <div className="nav-links-container" style={{ display: "flex", gap: 5 }}>
           {NAV_LINKS.map((l) => {
             const isActive = active === l.id;
@@ -121,14 +117,14 @@ const Navbar = ({ active, setActive }) => {
                   background: isActive ? "rgba(0, 191, 166, 0.1)" : "transparent",
                   color: isActive ? "#00BFA6" : isHovered ? "#ffffff" : "rgba(255,255,255,0.7)",
                   border: "none",
-                  padding: "8px 18px",
+                  padding: "6px 16px",
                   borderRadius: "4px",
-                  fontSize: "15px",
-                  fontWeight: 500,
+                  fontSize: "14px",
+                  fontWeight: 600,
                   cursor: "pointer",
                   transition: "all 0.2s ease",
-                  position: "relative",
-                  fontFamily: "inherit"
+                  fontFamily: headingFont,
+                  position: "relative"
                 }}
               >
                 {l.label}
@@ -140,39 +136,27 @@ const Navbar = ({ active, setActive }) => {
           })}
         </div>
 
-        {/* Action Section (Desktop Profile) */}
-        <div className="action-section" style={{ display: "flex", alignItems: "center" }}>
-          <div style={{
-            width: 32,
-            height: 32,
-            borderRadius: "50%",
-            background: "rgba(255,255,255,0.1)",
-            border: "1px solid rgba(255,255,255,0.2)",
-            cursor: "pointer"
-          }} />
-        </div>
-
-        {/* Hamburger Icon (Always pinned to the far right on mobile) */}
+        {/* Global Hamburger Menu Icon (Far Right) */}
         <div 
-          className="hamburger"
+          className="hamburger-container"
           onClick={() => setIsOpen(!isOpen)}
           style={{
-            display: "none",
+            display: "flex",
             flexDirection: "column",
             justifyContent: "center",
             alignItems: "center",
             gap: "5px",
             cursor: "pointer",
-            width: "40px",
-            height: "40px",
-            borderRadius: "4px",
-            background: isOpen ? "rgba(0, 191, 166, 0.1)" : "transparent",
-            transition: "0.3s"
+            width: "36px",
+            height: "36px",
+            borderRadius: "6px",
+            transition: "0.3s",
+            background: isOpen ? "rgba(0, 191, 166, 0.1)" : "transparent"
           }}
         >
-          <div style={{ width: "22px", height: "2px", background: "#00BFA6", borderRadius: "2px", transform: isOpen ? "rotate(45deg) translate(5px, 5px)" : "none", transition: "0.3s" }} />
-          <div style={{ width: "22px", height: "2px", background: "#00BFA6", borderRadius: "2px", opacity: isOpen ? 0 : 1, transition: "0.3s" }} />
-          <div style={{ width: "22px", height: "2px", background: "#00BFA6", borderRadius: "2px", transform: isOpen ? "rotate(-45deg) translate(5px, -5px)" : "none", transition: "0.3s" }} />
+          <div style={{ width: "20px", height: "2px", background: "#00BFA6", borderRadius: "2px", transform: isOpen ? "rotate(45deg) translate(5px, 5px)" : "none", transition: "0.3s" }} />
+          <div style={{ width: "20px", height: "2px", background: "#00BFA6", borderRadius: "2px", opacity: isOpen ? 0 : 1, transition: "0.3s" }} />
+          <div style={{ width: "20px", height: "2px", background: "#00BFA6", borderRadius: "2px", transform: isOpen ? "rotate(-45deg) translate(5px, -5px)" : "none", transition: "0.3s" }} />
         </div>
       </nav>
     </>
