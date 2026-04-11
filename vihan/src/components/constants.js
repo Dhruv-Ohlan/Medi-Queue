@@ -1,0 +1,18 @@
+export const COLORS = {
+  navy: "#0A1628",
+  navyMid: "#112240",
+  navyLight: "#1B3A6B",
+  teal: "#00BFA6",
+  tealDark: "#00897B",
+  tealLight: "#E0F7F4",
+  amber: "#FFB300",
+  red: "#E53935",
+  green: "#43A047",
+  white: "#FFFFFF",
+  gray50: "#F8FAFB",
+  gray100: "#EFF3F6",
+  gray200: "#D6DDE8",
+  gray400: "#8A99B0",
+  gray600: "#4A5568",
+  gray800: "#1A202C",
+};
