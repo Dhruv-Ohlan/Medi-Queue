@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { registerToken } from "../../api/services";
 
 // ── 1. THEME CONSTANTS ────────────────────────────────────────────────
 const COLORS = {
@@ -17,6 +18,9 @@ const QUESTIONS = [
   { id: "associated", label: "Associated Symptoms?", options: ["Nausea", "Dizziness", "Numbness", "High fever", "None"] },
   { id: "conditions", label: "Pre-existing?", options: ["Diabetes", "Hypertension", "Heart disease", "Asthma", "None"] },
 ];
+
+// Map severity text to numeric pain level
+const SEVERITY_MAP = { "Mild": 2, "Moderate": 5, "Severe": 8, "Unbearable": 10 };
 
 // ── 2. COMPACT TIMELINE ITEM ──────────────────────────────────────────
 const TimelineItem = ({ status, label, subtext, isLast }) => {
@@ -47,21 +51,75 @@ const TimelineItem = ({ status, label, subtext, isLast }) => {
 };
 
 // ── 3. MAIN PAGE ──────────────────────────────────────────────────────
-const AITriagePage = () => {
+const AITriagePage = ({ patientForm, setTrackingId, setActive }) => {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [view, setView] = useState("form");
 
+  // API integration state
+  const [submitting, setSubmitting] = useState(false);
+  const [apiError, setApiError] = useState(null);
+  const [tokenResult, setTokenResult] = useState(null);
+
   const q = QUESTIONS[step];
-  const isSelected = !!answers[q.id];
+  const isSelected = !!answers[q?.id];
+
+  /**
+   * Build the registration payload from patient form + triage answers
+   * and submit to POST /api/tokens/register
+   */
+  const submitRegistration = async () => {
+    setView("loading");
+    setSubmitting(true);
+    setApiError(null);
+
+    // Build the symptoms string from triage answers
+    const symptomsText = [
+      answers.complaint,
+      answers.associated !== "None" ? answers.associated : null,
+    ].filter(Boolean).join(", ");
+
+    const payload = {
+      name: patientForm?.name || "Demo Patient",
+      age: parseInt(patientForm?.age) || 30,
+      gender: patientForm?.gender || "Other",
+      phoneNumber: patientForm?.phone || "+910000000000",
+      symptoms: symptomsText || "General checkup",
+      painLevel: SEVERITY_MAP[answers.severity] || 3,
+      duration: answers.duration || "Unknown",
+      conditions: answers.conditions !== "None" ? answers.conditions : undefined,
+    };
+
+    try {
+      const res = await registerToken(payload);
+      setTokenResult(res.data);
+
+      // Store trackingId in shared state so PatientPortalPage can poll status
+      if (res.data?.trackingId && setTrackingId) {
+        setTrackingId(res.data.trackingId);
+      }
+
+      setView("result");
+    } catch (err) {
+      setApiError(err.message);
+      setView("error");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleNext = () => {
     if (step < QUESTIONS.length - 1) {
       setStep(step + 1);
     } else {
-      setView("loading");
-      setTimeout(() => setView("result"), 1500);
+      // Last question answered → submit to backend
+      submitRegistration();
     }
+  };
+
+  const handleViewToken = () => {
+    // Navigate to patient portal to see live status
+    setActive("patient");
   };
 
   return (
@@ -72,7 +130,7 @@ const AITriagePage = () => {
       display: "flex", 
       flexDirection: "column", 
       alignItems: "center", 
-      paddingTop: 120, // High clearance for Navbar
+      paddingTop: 120,
       paddingBottom: 40 
     }}>
       
@@ -117,29 +175,90 @@ const AITriagePage = () => {
       {view === "loading" && (
         <div style={{ textAlign: "center", marginTop: 80 }}>
           <div style={{ fontSize: 40, color: COLORS.teal }}>⚕️</div>
-          <h2 style={{ color: COLORS.white, marginTop: 20 }}>Triaging Symptoms...</h2>
+          <h2 style={{ color: COLORS.white, marginTop: 20 }}>
+            {submitting ? "Analyzing Symptoms & Assigning Token..." : "Triaging Symptoms..."}
+          </h2>
+          <p style={{ color: COLORS.slate, fontSize: 14, marginTop: 8 }}>
+            Our AI is determining urgency and routing to the right department.
+          </p>
         </div>
       )}
 
-      {/* ── VIEW: RESULT ── */}
-      {view === "result" && (
+      {/* ── VIEW: ERROR ── */}
+      {view === "error" && (
+        <div style={{ width: "90%", maxWidth: 400, textAlign: "center" }}>
+          <div style={{ 
+            background: "rgba(239, 68, 68, 0.1)", 
+            border: "1px solid rgba(239, 68, 68, 0.3)", 
+            borderRadius: 20, 
+            padding: 32 
+          }}>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
+            <h2 style={{ color: "#fca5a5", fontSize: 20, margin: "0 0 12px" }}>Registration Failed</h2>
+            <p style={{ color: COLORS.slate, fontSize: 14, lineHeight: 1.6 }}>
+              {apiError || "Unable to connect to server. Please try again."}
+            </p>
+            <button 
+              onClick={() => { setView("form"); setStep(QUESTIONS.length - 1); }} 
+              style={{ 
+                marginTop: 20, padding: "12px 28px", borderRadius: 10, fontSize: 14, fontWeight: 700,
+                background: "transparent", color: COLORS.teal, border: `1px solid ${COLORS.teal}`, cursor: "pointer" 
+              }}
+            >
+              ← Go Back and Retry
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── VIEW: RESULT (LIVE from API) ── */}
+      {view === "result" && tokenResult && (
         <div style={{ width: "90%", maxWidth: 400 }}>
           <div style={{ background: "rgba(17, 34, 64, 0.8)", borderRadius: 24, padding: "24px", textAlign: "center", border: "1px solid rgba(0, 191, 166, 0.3)", marginBottom: 24 }}>
             <div style={{ color: COLORS.slate, fontSize: 11, fontWeight: 700, letterSpacing: "2px" }}>TOKEN ASSIGNED</div>
-            <div style={{ fontSize: 56, fontWeight: 800, color: COLORS.teal, margin: "8px 0" }}>T-104</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.white }}>Unit: General Medicine</div>
+            <div style={{ fontSize: 56, fontWeight: 800, color: COLORS.teal, margin: "8px 0" }}>
+              {tokenResult.tokenNumber}
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.white }}>
+              Unit: {tokenResult.department}
+            </div>
+            <div style={{ marginTop: 8, fontSize: 12, color: COLORS.slate }}>
+              Urgency: <span style={{ color: tokenResult.urgencyLevel === "emergency" ? "#ef4444" : tokenResult.urgencyLevel === "priority" ? "#f59e0b" : COLORS.green, fontWeight: 700, textTransform: "uppercase" }}>{tokenResult.urgencyLevel}</span>
+            </div>
+            {tokenResult.estimatedWaitMinutes != null && (
+              <div style={{ marginTop: 8, fontSize: 13, color: COLORS.white }}>
+                Est. wait: <strong>{tokenResult.estimatedWaitMinutes} min</strong>
+              </div>
+            )}
           </div>
+
+          {/* AI Reasoning */}
+          {tokenResult.aiReasoning && (
+            <div style={{ background: "rgba(0, 191, 166, 0.08)", border: "1px solid rgba(0, 191, 166, 0.2)", borderRadius: 12, padding: "14px 18px", marginBottom: 24 }}>
+              <div style={{ fontSize: 11, color: COLORS.teal, fontWeight: 700, letterSpacing: "1px", marginBottom: 6 }}>AI TRIAGE REASONING</div>
+              <div style={{ fontSize: 13, color: COLORS.white, lineHeight: 1.5 }}>{tokenResult.aiReasoning}</div>
+            </div>
+          )}
 
           <div style={{ padding: "0 10px" }}>
             <h3 style={{ fontSize: 11, fontWeight: 800, color: COLORS.slate, letterSpacing: "1px", marginBottom: 20, textTransform: "uppercase" }}>Visit Progress</h3>
             
-            <TimelineItem status="completed" label="Registered" subtext="09:15 AM" />
-            <TimelineItem status="active" label="Waiting" subtext="Est. Call: 10:45 AM" />
-            <TimelineItem status="pending" label="Called" subtext="Room 4" />
+            <TimelineItem status="completed" label="Registered" subtext={new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} />
+            <TimelineItem status="active" label="Waiting" subtext={`Est. Wait: ${tokenResult.estimatedWaitMinutes || "—"} min`} />
+            <TimelineItem status="pending" label="Called" subtext="Pending" />
             <TimelineItem status="pending" label="Completed" subtext="Prescription" isLast />
           </div>
 
-          <button onClick={() => window.location.reload()} style={{ width: "100%", background: "transparent", border: "1px solid #233554", color: COLORS.slate, padding: "10px", borderRadius: 10, marginTop: 30, cursor: "pointer", fontSize: 13 }}>
+          {/* Navigate to live status tracker */}
+          <button onClick={handleViewToken} style={{ 
+            width: "100%", background: COLORS.teal, color: COLORS.navy, 
+            border: "none", padding: "14px", borderRadius: 10, fontSize: 15, fontWeight: 700, 
+            cursor: "pointer", marginTop: 24, boxShadow: "0 4px 15px rgba(0,191,166,0.3)"
+          }}>
+            Track Live Queue Status →
+          </button>
+
+          <button onClick={() => window.location.reload()} style={{ width: "100%", background: "transparent", border: "1px solid #233554", color: COLORS.slate, padding: "10px", borderRadius: 10, marginTop: 12, cursor: "pointer", fontSize: 13 }}>
             Restart Session
           </button>
         </div>

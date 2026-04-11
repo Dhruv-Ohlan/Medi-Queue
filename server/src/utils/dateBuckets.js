@@ -20,4 +20,8 @@ const getDateRange = (dateStr) => {
   return { start, end };
 };
 
+const getDayKey = (date = new Date()) => {
+  return date.toISOString().slice(0, 10);
+};
+
 module.exports = { getStartOfDay, getEndOfDay, getDayKey, getDateRange };

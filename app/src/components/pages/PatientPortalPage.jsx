@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../constants";
 import { Badge, StatCard } from "../components";
+import { getTokenStatus } from "../../api/services";
 
 const DEPTS = ["General Medicine", "Paediatrics", "Orthopaedics"];
 
@@ -50,25 +51,76 @@ const StepIndicator = ({ step }) => (
   </div>
 );
 
-const PatientPortalPage = ({ setActive }) => {
-  const [step, setStep] = useState(1);
-  const [form, setForm] = useState({ name: "", age: "", gender: "", phone: "" });
-  const [token, setToken] = useState(null);
+const PatientPortalPage = ({ setActive, patientForm, setPatientForm, trackingId, setTrackingId }) => {
+  // If we have a trackingId (came back from triage), show token view (step 3)
+  const [step, setStep] = useState(trackingId ? 3 : 1);
+  const [form, setForm] = useState({
+    name: patientForm?.name || "",
+    age: patientForm?.age || "",
+    gender: patientForm?.gender || "",
+    phone: patientForm?.phone || "",
+  });
+
+  // ── Token status polling state ──────────────────────────────────
+  const [tokenData, setTokenData] = useState(null);
+  const [statusLoading, setStatusLoading] = useState(false);
+  const [statusError, setStatusError] = useState(null);
+  const pollRef = useRef(null);
+
+  // Sync step if trackingId arrives (e.g. user navigates back from triage)
+  useEffect(() => {
+    if (trackingId) {
+      setStep(3);
+    }
+  }, [trackingId]);
+
+  // ── Poll token status every 30s when on step 3 ─────────────────
+  useEffect(() => {
+    if (step !== 3 || !trackingId) return;
+
+    const fetchStatus = async () => {
+      setStatusLoading(true);
+      setStatusError(null);
+      try {
+        const res = await getTokenStatus(trackingId);
+        setTokenData(res.data);
+      } catch (err) {
+        setStatusError(err.message);
+      } finally {
+        setStatusLoading(false);
+      }
+    };
+
+    fetchStatus(); // initial fetch
+    pollRef.current = setInterval(fetchStatus, 30000);
+
+    return () => clearInterval(pollRef.current);
+  }, [step, trackingId]);
 
   const handleContinue = () => {
+    // Validate minimum fields
+    if (!form.name.trim() || !form.age || !form.gender || !form.phone.trim()) {
+      alert("Please fill in all fields before continuing.");
+      return;
+    }
+
+    // Save to shared state so AITriagePage can use it
+    setPatientForm({ ...form });
     setActive("triage");
   };
 
-  const generateToken = () => {
+  // ── Demo token fallback (when backend isn't running) ────────────
+  const generateDemoToken = () => {
     const t = {
-      number:   `GM-${Math.floor(Math.random() * 40) + 60}`,
-      current:  `GM-${Math.floor(Math.random() * 30) + 20}`,
-      position: Math.floor(Math.random() * 12) + 3,
-      wait:     Math.floor(Math.random() * 45) + 15,
-      dept:     DEPTS[Math.floor(Math.random() * DEPTS.length)],
-      urgency:  ["routine", "priority"][Math.floor(Math.random() * 2)],
+      tokenNumber: Math.floor(Math.random() * 40) + 60,
+      currentServingToken: `${Math.floor(Math.random() * 30) + 20}`,
+      queuePosition: Math.floor(Math.random() * 12) + 3,
+      etaMinutes: Math.floor(Math.random() * 45) + 15,
+      department: DEPTS[Math.floor(Math.random() * DEPTS.length)],
+      urgencyLevel: ["routine", "priority"][Math.floor(Math.random() * 2)],
+      status: "waiting",
     };
-    setToken(t);
+    setTokenData(t);
     setStep(3);
   };
 
@@ -262,33 +314,75 @@ const PatientPortalPage = ({ setActive }) => {
           </div>
         )}
 
-        {/* ── Step 3: Token Display ── */}
-        {step === 3 && token && (
+        {/* ── Step 3: Token Display (LIVE from API) ── */}
+        {step === 3 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <div style={{ background: COLORS.navy, borderRadius: 20, padding: 32, textAlign: "center", border: "1px solid rgba(0,191,166,0.3)", position: "relative", overflow: "hidden" }}>
-              <div style={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, borderRadius: "50%", background: "rgba(0,191,166,0.06)" }} />
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", letterSpacing: "2px", marginBottom: 12 }}>YOUR TOKEN NUMBER</div>
-              <div className="token-number" style={{ fontSize: 64, fontWeight: 800, color: COLORS.teal, lineHeight: 1 }}>{token.number}</div>
-              <div style={{ marginTop: 12 }}><Badge type={token.urgency}>{token.urgency}</Badge></div>
-              <div style={{ marginTop: 20, fontSize: 14, color: "rgba(255,255,255,0.5)" }}>Department</div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: COLORS.white }}>{token.dept}</div>
-            </div>
-
-            <div style={{ background: "rgba(255, 255, 255, 0.98)", borderRadius: 16, padding: 24, border: `1px solid ${COLORS.gray200}` }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.navy, marginBottom: 20 }}>Live Queue Status</div>
-              <div className="stat-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-                <StatCard label="Now Serving"  value={token.current} />
-                <StatCard label="Your Position" value={`#${token.position}`} accent={COLORS.amber} />
-                <StatCard label="Est. Wait"     value={`${token.wait}m`}     accent={COLORS.green} />
+            {/* Loading state */}
+            {statusLoading && !tokenData && (
+              <div style={{ textAlign: "center", padding: 40, color: COLORS.white }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
+                <div style={{ fontSize: 16, fontWeight: 600 }}>Loading your token status...</div>
               </div>
-            </div>
+            )}
+
+            {/* Error state */}
+            {statusError && (
+              <div style={{ 
+                background: "rgba(239, 68, 68, 0.15)", 
+                border: "1px solid rgba(239, 68, 68, 0.4)", 
+                borderRadius: 12, 
+                padding: "16px 20px", 
+                color: "#fca5a5", 
+                fontSize: 14, 
+                textAlign: "center" 
+              }}>
+                ⚠️ {statusError}
+              </div>
+            )}
+
+            {/* Token card */}
+            {tokenData && (
+              <>
+                <div style={{ background: COLORS.navy, borderRadius: 20, padding: 32, textAlign: "center", border: "1px solid rgba(0,191,166,0.3)", position: "relative", overflow: "hidden" }}>
+                  <div style={{ position: "absolute", top: -40, right: -40, width: 160, height: 160, borderRadius: "50%", background: "rgba(0,191,166,0.06)" }} />
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", letterSpacing: "2px", marginBottom: 12 }}>YOUR TOKEN NUMBER</div>
+                  <div className="token-number" style={{ fontSize: 64, fontWeight: 800, color: COLORS.teal, lineHeight: 1 }}>
+                    {tokenData.tokenNumber}
+                  </div>
+                  <div style={{ marginTop: 12 }}>
+                    <Badge type={tokenData.urgencyLevel}>{tokenData.urgencyLevel}</Badge>
+                    {" "}
+                    <Badge type={tokenData.status === "called" ? "priority" : "general"}>{tokenData.status}</Badge>
+                  </div>
+                  <div style={{ marginTop: 20, fontSize: 14, color: "rgba(255,255,255,0.5)" }}>Department</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: COLORS.white }}>{tokenData.department}</div>
+                </div>
+
+                <div style={{ background: "rgba(255, 255, 255, 0.98)", borderRadius: 16, padding: 24, border: `1px solid ${COLORS.gray200}` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.navy }}>Live Queue Status</div>
+                    {statusLoading && (
+                      <div style={{ fontSize: 11, color: COLORS.gray400, fontWeight: 600 }}>Refreshing...</div>
+                    )}
+                  </div>
+                  <div className="stat-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                    <StatCard label="Now Serving"  value={tokenData.currentServingToken || "—"} />
+                    <StatCard label="Your Position" value={tokenData.queuePosition != null ? `#${tokenData.queuePosition}` : "—"} accent={COLORS.amber} />
+                    <StatCard label="Est. Wait"     value={tokenData.etaMinutes != null ? `${tokenData.etaMinutes}m` : "—"} accent={COLORS.green} />
+                  </div>
+                  <div style={{ marginTop: 14, fontSize: 11, color: COLORS.gray400, textAlign: "center" }}>
+                    Auto-refreshes every 30 seconds
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 
         {step === 1 && (
           <p style={{ textAlign: "center", marginTop: 20, fontSize: 14, color: "rgba(255,255,255,0.8)" }}>
             Already triaged?{" "}
-            <span onClick={generateToken} style={{ color: COLORS.teal, cursor: "pointer", fontWeight: 700, textDecoration: "underline" }}>
+            <span onClick={generateDemoToken} style={{ color: COLORS.teal, cursor: "pointer", fontWeight: 700, textDecoration: "underline" }}>
               Generate demo token
             </span>
           </p>

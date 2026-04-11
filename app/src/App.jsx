@@ -16,13 +16,23 @@ const PAGES = {
  
 const App = () => {
   const [activePage, setActivePage] = useState("landing");
+
+  // Shared state: patient registration data flows Patient → Triage → Token
+  const [patientForm, setPatientForm] = useState({ name: "", age: "", gender: "", phone: "" });
+  const [trackingId, setTrackingId] = useState(null);
  
   const PageComponent = PAGES[activePage] || HomePage;
  
   return (
     <div style={{ fontFamily: "'DM Sans', sans-serif" }}>
       <Navbar active={activePage} setActive={setActivePage} />
-      <PageComponent setActive={setActivePage} />
+      <PageComponent
+        setActive={setActivePage}
+        patientForm={patientForm}
+        setPatientForm={setPatientForm}
+        trackingId={trackingId}
+        setTrackingId={setTrackingId}
+      />
     </div>
   );
 };
