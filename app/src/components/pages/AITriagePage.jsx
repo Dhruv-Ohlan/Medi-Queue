@@ -1,290 +1,149 @@
-import { useState } from "react";
-import { COLORS } from "../constants";
-import { Badge } from "../components";
+import React, { useState } from "react";
 
-const QUESTIONS = [
-  {
-    id: "complaint",
-    label: "What is your primary complaint today?",
-    type: "options",
-    options: ["Fever / Chills", "Chest pain", "Injury / Fracture", "Abdominal pain", "Headache", "Breathing difficulty", "Child illness", "Other"],
-  },
-  {
-    id: "duration",
-    label: "How long have you had this symptom?",
-    type: "options",
-    options: ["Less than 24 hours", "1–3 days", "4–7 days", "More than a week"],
-  },
-  {
-    id: "severity",
-    label: "On a scale of 1–10, how severe is your discomfort?",
-    type: "slider",
-    min: 1,
-    max: 10,
-  },
-  {
-    id: "associated",
-    label: "Any associated symptoms?",
-    type: "multi",
-    options: ["Nausea/Vomiting", "Dizziness", "Shortness of breath", "Numbness", "High fever (>39°C)", "None"],
-  },
-  {
-    id: "conditions",
-    label: "Any known pre-existing conditions?",
-    type: "multi",
-    options: ["Diabetes", "Hypertension", "Heart disease", "Asthma", "None"],
-  },
-];
-
-// ── Sub-components ──────────────────────────────────────────────────────────
-
-const OptionsGrid = ({ question, answers, setAnswers }) => (
-  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-    {question.options.map((opt) => {
-      const selected = answers[question.id] === opt;
-      return (
-        <button
-          key={opt}
-          onClick={() => setAnswers({ ...answers, [question.id]: opt })}
-          style={{
-            padding: "12px 16px",
-            borderRadius: 10,
-            fontSize: 14,
-            cursor: "pointer",
-            textAlign: "left",
-            background: selected ? COLORS.tealLight : "rgba(255,255,255,0.7)",
-            color: selected ? COLORS.tealDark : COLORS.gray800,
-            border: selected ? `1.5px solid ${COLORS.teal}` : `1px solid ${COLORS.gray200}`,
-            fontWeight: selected ? 600 : 400,
-            backdropFilter: "blur(4px)",
-          }}
-        >
-          {opt}
-        </button>
-      );
-    })}
-  </div>
-);
-
-const SeveritySlider = ({ question, answers, setAnswers }) => (
-  <div>
-    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
-      <span style={{ fontSize: 12, color: COLORS.gray400 }}>Mild (1)</span>
-      <span style={{ fontSize: 24, fontWeight: 800, color: COLORS.navy, fontFamily: "'Syne', sans-serif" }}>
-        {answers[question.id] || 5}
-      </span>
-      <span style={{ fontSize: 12, color: COLORS.gray400 }}>Severe (10)</span>
-    </div>
-    <input
-      type="range"
-      min={1}
-      max={10}
-      value={answers[question.id] || 5}
-      onChange={(e) => setAnswers({ ...answers, [question.id]: parseInt(e.target.value) })}
-      style={{ width: "100%", accentColor: COLORS.teal }}
-    />
-  </div>
-);
-
-const MultiSelect = ({ question, answers, setAnswers }) => (
-  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-    {question.options.map((opt) => {
-      const selected = (answers[question.id] || []).includes(opt);
-      return (
-        <button
-          key={opt}
-          onClick={() => {
-            const cur = answers[question.id] || [];
-            setAnswers({
-              ...answers,
-              [question.id]: selected ? cur.filter((x) => x !== opt) : [...cur, opt],
-            });
-          }}
-          style={{
-            padding: "12px 16px",
-            borderRadius: 10,
-            fontSize: 14,
-            cursor: "pointer",
-            textAlign: "left",
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            background: selected ? COLORS.tealLight : "rgba(255,255,255,0.7)",
-            color: selected ? COLORS.tealDark : COLORS.gray800,
-            border: selected ? `1.5px solid ${COLORS.teal}` : `1px solid ${COLORS.gray200}`,
-            fontWeight: selected ? 600 : 400,
-            backdropFilter: "blur(4px)",
-          }}
-        >
-          <span style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${selected ? COLORS.teal : COLORS.gray200}`, background: selected ? COLORS.teal : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 11, color: COLORS.white }}>
-            {selected ? "✓" : ""}
-          </span>
-          {opt}
-        </button>
-      );
-    })}
-  </div>
-);
-
-// ── Classification logic ────────────────────────────────────────────────────
-
-const classifySymptoms = (answers) => {
-  const severity = answers.severity || 5;
-  const complaint = answers.complaint || "";
-  let urgency = "routine";
-  let dept = "General Medicine";
-  let reason = "Symptoms appear stable and non-urgent.";
-
-  if (complaint === "Chest pain" || complaint === "Breathing difficulty" || severity >= 9) {
-    urgency = "emergency";
-    reason = "High-severity symptoms requiring immediate attention.";
-  } else if (severity >= 7 || complaint === "Injury / Fracture") {
-    urgency = "priority";
-    dept = complaint === "Injury / Fracture" ? "Orthopaedics" : "General Medicine";
-    reason = "Moderate-high severity; should be seen within the hour.";
-  } else if (complaint === "Child illness") {
-    dept = "Paediatrics";
-  }
-
-  return {
-    urgency,
-    dept,
-    reason,
-    token: `${dept.substring(0, 2).toUpperCase()}-${Math.floor(Math.random() * 30) + 40}`,
-    wait: Math.floor(Math.random() * 40) + 10,
-  };
+// ── 1. THEME CONSTANTS ────────────────────────────────────────────────
+const COLORS = {
+  teal: "#00BFA6",
+  navy: "#0a192f",
+  lightNavy: "#112240",
+  white: "#ffffff",
+  slate: "#8892b0",
+  green: "#22c55e",
 };
 
-// ── Main Page ───────────────────────────────────────────────────────────────
+const QUESTIONS = [
+  { id: "complaint", label: "Primary Complaint?", options: ["Fever / Chills", "Chest pain", "Injury / Fracture", "Abdominal pain", "Headache", "Breathing difficulty", "Child illness", "Other"] },
+  { id: "duration", label: "Symptom Duration?", options: ["Less than 24h", "1–3 days", "4–7 days", "1+ week"] },
+  { id: "severity", label: "Discomfort Level?", options: ["Mild", "Moderate", "Severe", "Unbearable"] },
+  { id: "associated", label: "Associated Symptoms?", options: ["Nausea", "Dizziness", "Numbness", "High fever", "None"] },
+  { id: "conditions", label: "Pre-existing?", options: ["Diabetes", "Hypertension", "Heart disease", "Asthma", "None"] },
+];
 
+// ── 2. COMPACT TIMELINE ITEM ──────────────────────────────────────────
+const TimelineItem = ({ status, label, subtext, isLast }) => {
+  const isCompleted = status === "completed";
+  const isActive = status === "active";
+
+  return (
+    <div style={{ display: "flex", gap: 12, height: isLast ? "auto" : 60 }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <div style={{
+          width: 20, height: 20, borderRadius: "50%",
+          background: isCompleted ? COLORS.green : "transparent",
+          border: isActive ? `2px solid ${COLORS.teal}` : `2px solid #233554`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 2, boxShadow: isActive ? `0 0 10px ${COLORS.teal}` : "none"
+        }}>
+          {isCompleted && <span style={{ color: "white", fontSize: 10 }}>✓</span>}
+          {isActive && <div style={{ width: 8, height: 8, background: COLORS.teal, borderRadius: "50%" }} />}
+        </div>
+        {!isLast && <div style={{ width: 1, flex: 1, background: isCompleted ? COLORS.green : "#233554" }} />}
+      </div>
+      <div style={{ paddingTop: 0 }}>
+        <div style={{ fontWeight: 700, color: (isActive || isCompleted) ? COLORS.white : COLORS.slate, fontSize: 14 }}>{label}</div>
+        <div style={{ fontSize: 11, color: COLORS.slate }}>{subtext}</div>
+      </div>
+    </div>
+  );
+};
+
+// ── 3. MAIN PAGE ──────────────────────────────────────────────────────
 const AITriagePage = () => {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [view, setView] = useState("form");
 
   const q = QUESTIONS[step];
+  const isSelected = !!answers[q.id];
 
-  const handleClassify = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setResult(classifySymptoms(answers));
-      setLoading(false);
-    }, 1800);
-  };
-
-  const handleReset = () => {
-    setStep(0);
-    setAnswers({});
-    setResult(null);
-  };
-
-  const urgencyMeta = {
-    emergency: { icon: "🚨", bg: "rgba(255, 243, 243, 0.95)", border: COLORS.red, title: "Immediate Attention Required" },
-    priority: { icon: "⚡", bg: "rgba(255, 248, 236, 0.95)", border: COLORS.amber, title: "Priority Patient" },
-    routine: { icon: "✅", bg: "rgba(224, 251, 244, 0.95)", border: COLORS.teal, title: "Routine Visit" },
+  const handleNext = () => {
+    if (step < QUESTIONS.length - 1) {
+      setStep(step + 1);
+    } else {
+      setView("loading");
+      setTimeout(() => setView("result"), 1500);
+    }
   };
 
   return (
-    <div style={{ minHeight: "100vh", position: "relative", fontFamily: "'DM Sans', sans-serif", paddingTop: 64, overflowX: "hidden" }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+    <div style={{ 
+      minHeight: "100vh", 
+      fontFamily: "'Times New Roman', Times, serif", 
+      background: `radial-gradient(circle at 50% 50%, #112240 0%, #0a192f 100%)`,
+      display: "flex", 
+      flexDirection: "column", 
+      alignItems: "center", 
+      paddingTop: 120, // High clearance for Navbar
+      paddingBottom: 40 
+    }}>
+      
+      {/* ── VIEW: FORM ── */}
+      {view === "form" && (
+        <div style={{ width: "90%", maxWidth: 400 }}>
+          <div style={{ textAlign: "center", marginBottom: 30 }}>
+            <h1 style={{ fontSize: 32, fontWeight: 800, color: COLORS.white, margin: 0 }}>Your Visit</h1>
+            <p style={{ color: COLORS.slate, fontSize: 14, marginTop: 8 }}>Complete assessment to join queue.</p>
+          </div>
 
-      {/* ── 1. BACKGROUND IMAGE LAYER (5% Blur) ── */}
-      <div 
-        style={{
-          position: "fixed",
-          top: 0, left: 0, width: "100%", height: "100%",
-          backgroundImage: "url('/ai.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          zIndex: 0,
-        }}
-      >
-        <div 
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "linear-gradient(to bottom, rgba(10, 25, 47, 0.3), rgba(10, 25, 47, 0.6))",
-            backdropFilter: "blur(4px)", // 5% Blur
-            WebkitBackdropFilter: "blur(4px)",
-          }}
-        />
-      </div>
+          <div style={{ background: "rgba(17, 34, 64, 0.7)", borderRadius: 20, padding: 24, border: "1px solid rgba(0, 191, 166, 0.2)", backdropFilter: "blur(10px)" }}>
+            <div style={{ fontSize: 11, color: COLORS.teal, fontWeight: 700, letterSpacing: "1px", marginBottom: 12 }}>
+              STEP {step + 1} OF {QUESTIONS.length}
+            </div>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: COLORS.white, marginBottom: 24, lineHeight: 1.3 }}>{q.label}</h2>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
+              {q.options.map(opt => (
+                <button key={opt} onClick={() => setAnswers({ ...answers, [q.id]: opt })} style={{
+                  padding: "12px 16px", borderRadius: 10, textAlign: "left", fontSize: 15, fontWeight: 600, cursor: "pointer",
+                  border: answers[q.id] === opt ? `1px solid ${COLORS.teal}` : "1px solid #233554",
+                  background: answers[q.id] === opt ? "rgba(0, 191, 166, 0.1)" : "transparent", 
+                  color: answers[q.id] === opt ? COLORS.teal : COLORS.white,
+                  transition: "0.2s"
+                }}>{opt}</button>
+              ))}
+            </div>
 
-      {/* ── 2. CONTENT LAYER ── */}
-      <div style={{ maxWidth: 600, margin: "0 auto", padding: "48px 24px", position: "relative", zIndex: 1 }}>
-        
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <div style={{ fontSize: 13, color: COLORS.teal, fontWeight: 700, letterSpacing: "1px", marginBottom: 10 }}>AI TRIAGE</div>
-          <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: 34, fontWeight: 800, color: COLORS.white, margin: "0 0 8px", textShadow: "0 2px 10px rgba(0,0,0,0.3)" }}>
-            Symptom Assessment
-          </h1>
-          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 15, margin: 0 }}>
-            Answer a few questions to get routed to the right department.
-          </p>
+            <button onClick={handleNext} disabled={!isSelected} style={{
+              width: "100%", padding: "14px", borderRadius: 10, fontSize: 16, fontWeight: 700, border: "none",
+              background: isSelected ? COLORS.teal : "#233554", color: isSelected ? COLORS.navy : COLORS.slate, 
+              cursor: isSelected ? "pointer" : "not-allowed"
+            }}>
+              {step < QUESTIONS.length - 1 ? "Next Step" : "Generate Token"}
+            </button>
+          </div>
         </div>
+      )}
 
-        {/* Question card */}
-        {!result && !loading && (
-          <div style={{ background: "rgba(255, 255, 255, 0.92)", borderRadius: 16, padding: 32, border: "1px solid rgba(255,255,255,0.3)", boxShadow: "0 20px 40px rgba(0,0,0,0.2)", backdropFilter: "blur(8px)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-              <span style={{ fontSize: 13, color: COLORS.gray600 }}>Question {step + 1} of {QUESTIONS.length}</span>
-              <div style={{ background: COLORS.gray100, borderRadius: 10, height: 6, flex: 1, margin: "0 16px", overflow: "hidden" }}>
-                <div style={{ background: COLORS.teal, height: "100%", width: `${((step + 1) / QUESTIONS.length) * 100}%`, transition: "width 0.3s" }} />
-              </div>
-            </div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: COLORS.navy, lineHeight: 1.4, marginBottom: 24 }}>{q.label}</div>
-            {q.type === "options" && <OptionsGrid question={q} answers={answers} setAnswers={setAnswers} />}
-            {q.type === "slider" && <SeveritySlider question={q} answers={answers} setAnswers={setAnswers} />}
-            {q.type === "multi" && <MultiSelect question={q} answers={answers} setAnswers={setAnswers} />}
-            <div style={{ display: "flex", gap: 12, marginTop: 28 }}>
-              {step > 0 && (
-                <button onClick={() => setStep((s) => s - 1)} style={{ padding: "12px 24px", borderRadius: 10, border: `1px solid ${COLORS.gray200}`, background: COLORS.white, color: COLORS.gray600, fontWeight: 600, cursor: "pointer" }}>← Back</button>
-              )}
-              <button onClick={() => step < QUESTIONS.length - 1 ? setStep((s) => s + 1) : handleClassify()} style={{ flex: 1, padding: "13px", borderRadius: 10, border: "none", background: COLORS.navy, color: COLORS.white, fontWeight: 700, cursor: "pointer" }}>
-                {step < QUESTIONS.length - 1 ? "Next →" : "Classify My Symptoms →"}
-              </button>
-            </div>
-          </div>
-        )}
+      {/* ── VIEW: LOADING ── */}
+      {view === "loading" && (
+        <div style={{ textAlign: "center", marginTop: 80 }}>
+          <div style={{ fontSize: 40, color: COLORS.teal }}>⚕️</div>
+          <h2 style={{ color: COLORS.white, marginTop: 20 }}>Triaging Symptoms...</h2>
+        </div>
+      )}
 
-        {/* Loading */}
-        {loading && (
-          <div style={{ background: "rgba(255, 255, 255, 0.95)", borderRadius: 16, padding: 48, border: "1px solid rgba(255,255,255,0.3)", textAlign: "center", backdropFilter: "blur(10px)" }}>
-            <div style={{ fontSize: 40, marginBottom: 20 }}>🤖</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: COLORS.navy }}>AI is analyzing your symptoms...</div>
+      {/* ── VIEW: RESULT ── */}
+      {view === "result" && (
+        <div style={{ width: "90%", maxWidth: 400 }}>
+          <div style={{ background: "rgba(17, 34, 64, 0.8)", borderRadius: 24, padding: "24px", textAlign: "center", border: "1px solid rgba(0, 191, 166, 0.3)", marginBottom: 24 }}>
+            <div style={{ color: COLORS.slate, fontSize: 11, fontWeight: 700, letterSpacing: "2px" }}>TOKEN ASSIGNED</div>
+            <div style={{ fontSize: 56, fontWeight: 800, color: COLORS.teal, margin: "8px 0" }}>T-104</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.white }}>Unit: General Medicine</div>
           </div>
-        )}
 
-        {/* Result */}
-        {result && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <div style={{ background: urgencyMeta[result.urgency].bg, border: `2px solid ${urgencyMeta[result.urgency].border}`, borderRadius: 16, padding: 28, textAlign: "center" }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>{urgencyMeta[result.urgency].icon}</div>
-              <Badge type={result.urgency}>{result.urgency}</Badge>
-              <div style={{ fontSize: 22, fontWeight: 800, color: COLORS.navy, marginTop: 16, fontFamily: "'Syne', sans-serif" }}>{urgencyMeta[result.urgency].title}</div>
-              <div style={{ fontSize: 14, color: COLORS.gray600, marginTop: 8 }}>{result.reason}</div>
-            </div>
-            <div style={{ background: "rgba(255, 255, 255, 0.95)", borderRadius: 16, padding: 24, border: "1px solid rgba(255,255,255,0.3)" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                {[
-                  { label: "ASSIGNED DEPARTMENT", value: result.dept, color: COLORS.navy },
-                  { label: "TOKEN NUMBER", value: result.token, color: COLORS.tealDark },
-                  { label: "ESTIMATED WAIT", value: `${result.wait} minutes`, color: COLORS.navy },
-                  { label: "CLASSIFICATION", value: "AI-Powered", color: COLORS.navy },
-                ].map((item) => (
-                  <div key={item.label}>
-                    <div style={{ fontSize: 12, color: COLORS.gray400, marginBottom: 4 }}>{item.label}</div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: item.color }}>{item.value}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <button onClick={handleReset} style={{ background: "rgba(255,255,255,0.2)", color: COLORS.white, border: "1px solid rgba(255,255,255,0.3)", padding: "12px", borderRadius: 10, fontWeight: 600, cursor: "pointer", backdropFilter: "blur(5px)" }}>Start Over</button>
+          <div style={{ padding: "0 10px" }}>
+            <h3 style={{ fontSize: 11, fontWeight: 800, color: COLORS.slate, letterSpacing: "1px", marginBottom: 20, textTransform: "uppercase" }}>Visit Progress</h3>
+            
+            <TimelineItem status="completed" label="Registered" subtext="09:15 AM" />
+            <TimelineItem status="active" label="Waiting" subtext="Est. Call: 10:45 AM" />
+            <TimelineItem status="pending" label="Called" subtext="Room 4" />
+            <TimelineItem status="pending" label="Completed" subtext="Prescription" isLast />
           </div>
-        )}
-      </div>
+
+          <button onClick={() => window.location.reload()} style={{ width: "100%", background: "transparent", border: "1px solid #233554", color: COLORS.slate, padding: "10px", borderRadius: 10, marginTop: 30, cursor: "pointer", fontSize: 13 }}>
+            Restart Session
+          </button>
+        </div>
+      )}
     </div>
   );
 };

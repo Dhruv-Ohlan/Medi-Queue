@@ -9,12 +9,12 @@ const STATS = [
 ];
 
 const FEATURES = [
-  { icon: "📱", title: "Digital Token System",  desc: "Scan QR or open URL. Get a token instantly with live position tracking." },
-  { icon: "🤖", title: "AI Symptom Triage",     desc: "OpenAI-powered intake classifies urgency & routes you to the right department." },
-  { icon: "⚡", title: "Real-Time Queue",        desc: "Auto-refreshing queue for both patients and doctors. No hardware required." },
-  { icon: "📊", title: "Analytics Dashboard",   desc: "Cross-department load, triage breakdowns, and daily PDF reports for admins." },
-  { icon: "🔔", title: "SMS Notifications",     desc: "WhatsApp & SMS alerts when you're 5 tokens away via Twilio." },
-  { icon: "🏥", title: "Multi-Department",      desc: "General Medicine, Paediatrics, Orthopaedics — extensible via admin panel." },
+  { icon: "📱", title: "Digital Token System",   desc: "Scan QR or open URL. Get a token instantly with live position tracking." },
+  { icon: "🤖", title: "AI Symptom Triage",      desc: "OpenAI-powered intake classifies urgency & routes you to the right department." },
+  { icon: "⚡", title: "Real-Time Queue",         desc: "Auto-refreshing queue for both patients and doctors. No hardware required." },
+  { icon: "📊", title: "Analytics Dashboard",    desc: "Cross-department load, triage breakdowns, and daily PDF reports for admins." },
+  { icon: "🔔", title: "SMS Notifications",      desc: "WhatsApp & SMS alerts when you're 5 tokens away via Twilio." },
+  { icon: "🏥", title: "Multi-Department",       desc: "General Medicine, Paediatrics, Orthopaedics — extensible via admin panel." },
 ];
 
 const PROBLEMS = [
@@ -26,44 +26,62 @@ const PROBLEMS = [
 
 const HomePage = ({ setActive }) => {
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: COLORS.navy, fontFamily: "'DM Sans', sans-serif", position: "relative", overflowX: "hidden" }}>
-      <link
-        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap"
-        rel="stylesheet"
-      />
+    <div style={{ 
+      minHeight: "100vh", 
+      backgroundColor: COLORS.navy, 
+      fontFamily: "'Times New Roman', Times, serif", // Updated to professional serif
+      position: "relative", 
+      overflowX: "hidden" 
+    }}>
+      
+      {/* ── RESPONSIVE STYLES (Inline Media Query Simulation) ── */}
+      <style>
+        {`
+          @media (max-width: 768px) {
+            .hero-title { font-size: 42px !important; }
+            .hero-para { font-size: 16px !important; }
+            .stats-container { flex-direction: column !important; width: 90% !important; margin-top: 40px !important; }
+            .stats-item { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important; padding: 20px !important; }
+            .grid-two-col { grid-template-columns: 1fr !important; gap: 40px !important; }
+            .grid-three-col { grid-template-columns: 1fr !important; }
+            .section-padding { padding: 60px 20px !important; }
+            .btn-group { flex-direction: column !important; width: 100% !important; gap: 12px !important; }
+            .btn-group button { width: 100% !important; }
+          }
+        `}
+      </style>
 
-      {/* ── 1. NON-SCROLLABLE BACKGROUND IMAGE ── */}
+      {/* ── 1. FIXED BACKGROUND IMAGE ── */}
       <div 
         style={{
-          position: "fixed", // Makes image non-scrollable
+          position: "fixed",
           top: 0,
           left: 0,
           width: "100%",
           height: "100%", 
           backgroundImage: "url('/home.png')", 
-          backgroundSize: "60%",
+          backgroundSize: "cover", // Optimized for full screen
           backgroundPosition: "center",
           zIndex: 0,
         }}
       >
-        {/* Overlay for Visibility and Blur */}
         <div 
           style={{
             position: "absolute",
             inset: 0,
-            // Balanced tint: dark enough for text, light enough to see the image clearly
-            background: `linear-gradient(to bottom, rgba(10, 25, 47, 0.4), rgba(10, 25, 47, 0.7))`,
-            backdropFilter: "blur(6px)", // Reduced blur so user can see "what's in the image"
+            background: `linear-gradient(to bottom, rgba(10, 25, 47, 0.5), rgba(10, 25, 47, 0.8))`,
+            backdropFilter: "blur(3px)",
             WebkitBackdropFilter: "blur(3px)",
           }}
         />
       </div>
 
-      {/* ── 2. CONTENT LAYER (Scrolls over the fixed image) ── */}
+      {/* ── 2. SCROLLABLE CONTENT ── */}
       <div style={{ position: "relative", zIndex: 1 }}>
         
         {/* ── Hero Section ── */}
         <div
+          className="section-padding"
           style={{
             minHeight: "100vh",
             display: "flex",
@@ -80,87 +98,83 @@ const HomePage = ({ setActive }) => {
               display: "inline-flex",
               alignItems: "center",
               gap: 8,
-              background: "rgba(0,191,166,0.2)",
-              border: "1px solid rgba(0,191,166,0.5)",
-              borderRadius: 20,
+              background: "rgba(0,191,166,0.15)",
+              border: "1px solid rgba(0,191,166,0.4)",
+              borderRadius: 4,
               padding: "6px 16px",
-              marginBottom: 32,
-              backdropFilter: "blur(10px)",
+              marginBottom: 24,
             }}
           >
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.teal, display: "inline-block" }} />
-            <span style={{ fontSize: 12, color: COLORS.teal, fontWeight: 600, letterSpacing: "0.5px" }}>
-              HACKATHON BUILD · HEALTHTECH 2026
+            <span style={{ fontSize: 11, color: COLORS.teal, fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase" }}>
+              Medical Efficiency Dashboard 2026
             </span>
           </div>
 
           <h1
+            className="hero-title"
             style={{
-              fontFamily: "'Syne', sans-serif",
-              fontSize: 72,
-              fontWeight: 800,
+              fontSize: 68,
+              fontWeight: 700,
               color: COLORS.white,
-              lineHeight: 1.05,
+              lineHeight: 1.1,
               margin: "0 0 24px",
-              maxWidth: 800,
-              textShadow: "0 4px 20px rgba(0,0,0,0.8)", // Heavy shadow for maximum readability
+              maxWidth: 900,
+              textShadow: "0 4px 15px rgba(0,0,0,0.6)",
             }}
           >
-            End the<br />
-            <span style={{ color: COLORS.teal }}>Hospital Queue</span>
-            <br />Chaos
+            Optimizing Healthcare Delivery for <br />
+            <span style={{ color: COLORS.teal }}>Digital Hospital Infrastructure</span>
           </h1>
 
-          <p style={{ fontSize: 20, color: COLORS.white, maxWidth: 560, lineHeight: 1.7, margin: "0 0 48px", textShadow: "0 2px 10px rgba(0,0,0,0.5)" }}>
-            Real-time digital queues, AI-powered triage, and zero hardware dependency — built for India's 1.4 billion.
+          <p className="hero-para" style={{ fontSize: 20, color: "rgba(255,255,255,0.9)", maxWidth: 650, lineHeight: 1.6, margin: "0 0 40px" }}>
+            Reducing OPD congestion through real-time queue synchronization, AI-based triage routing, and unified administrative analytics.
           </p>
 
-          <div style={{ display: "flex", gap: 16, justifyContent: "center" }}>
+          <div className="btn-group" style={{ display: "flex", gap: 16, justifyContent: "center" }}>
             <button
               onClick={() => setActive("patient")}
-              style={{ background: COLORS.teal, color: COLORS.navy, border: "none", padding: "14px 32px", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 10px 25px rgba(0,0,191,0.3)" }}
+              style={{ background: COLORS.teal, color: COLORS.navy, border: "none", padding: "16px 36px", borderRadius: 4, fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 8px 20px rgba(0,0,0,0.3)" }}
             >
-              Get Your Token →
+              Access Patient Portal →
             </button>
             <button
               onClick={() => setActive("doctor")}
-              style={{ background: "rgba(255,255,255,0.15)", color: COLORS.white, border: "1px solid rgba(255,255,255,0.3)", padding: "14px 32px", borderRadius: 10, fontSize: 15, fontWeight: 500, cursor: "pointer", backdropFilter: "blur(10px)" }}
+              style={{ background: "rgba(255,255,255,0.1)", color: COLORS.white, border: "1px solid rgba(255,255,255,0.3)", padding: "16px 36px", borderRadius: 4, fontSize: 15, fontWeight: 600, cursor: "pointer", backdropFilter: "blur(10px)" }}
             >
-              Doctor Dashboard
+              Doctor Login
             </button>
           </div>
 
           {/* Stats Bar */}
-          <div style={{ display: "flex", marginTop: 80, borderRadius: 14, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(10, 25, 47, 0.6)", backdropFilter: "blur(20px)" }}>
+          <div className="stats-container" style={{ display: "flex", marginTop: 80, borderRadius: 8, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(10, 25, 47, 0.8)", backdropFilter: "blur(20px)" }}>
             {STATS.map((s, i) => (
-              <div key={i} style={{ padding: "24px 40px", textAlign: "center", borderRight: i < STATS.length - 1 ? "1px solid rgba(255,255,255,0.1)" : "none" }}>
-                <div style={{ fontSize: 32, fontWeight: 800, color: COLORS.teal, fontFamily: "'Syne', sans-serif" }}>{s.n}</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>{s.d}</div>
+              <div key={i} className="stats-item" style={{ padding: "24px 45px", textAlign: "center", borderRight: i < STATS.length - 1 ? "1px solid rgba(255,255,255,0.1)" : "none" }}>
+                <div style={{ fontSize: 36, fontWeight: 700, color: COLORS.teal }}>{s.n}</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginTop: 4, textTransform: "uppercase", letterSpacing: "0.5px" }}>{s.d}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* ── Problem Section ── */}
-        {/* We use semi-transparent backgrounds so the fixed image stays visible behind the content sections */}
-        <div style={{ padding: "100px 80px", background: "rgba(10, 25, 47, 0.85)", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+        <div className="section-padding" style={{ padding: "100px 80px", background: "rgba(255, 255, 255, 0.02)", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 60, alignItems: "center" }}>
+            <div className="grid-two-col" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 80, alignItems: "center" }}>
               <div>
-                <div style={{ color: COLORS.teal, fontSize: 12, fontWeight: 700, letterSpacing: "1.5px", marginBottom: 16 }}>THE PROBLEM</div>
-                <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 44, fontWeight: 800, color: COLORS.white, lineHeight: 1.1, margin: "0 0 20px" }}>One physical token.<br />Zero information.</h2>
-                <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 16, lineHeight: 1.8, margin: "0 0 32px" }}>
-                  India's government hospitals handle over 50 million OPD visits per month. Patients wait 3–6 hours in crowded corridors.
+                <div style={{ color: COLORS.teal, fontSize: 13, fontWeight: 700, letterSpacing: "1px", marginBottom: 16 }}>OPERATIONAL CHALLENGES</div>
+                <h2 style={{ fontSize: 42, fontWeight: 700, color: COLORS.white, lineHeight: 1.2, margin: "0 0 20px" }}>The Bottleneck of <br />Traditional OPD Management.</h2>
+                <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 17, lineHeight: 1.8, margin: "0 0 32px" }}>
+                  Current healthcare systems face significant throughput issues. Physical queuing leads to patient dissatisfaction and administrative opacity.
                 </p>
-                <button onClick={() => setActive("triage")} style={{ background: "transparent", color: COLORS.teal, border: `1px solid ${COLORS.teal}`, padding: "12px 24px", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Try AI Triage →</button>
+                <button onClick={() => setActive("triage")} style={{ background: "transparent", color: COLORS.teal, border: `1px solid ${COLORS.teal}`, padding: "12px 28px", borderRadius: 4, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>View AI Triage Logic →</button>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 {PROBLEMS.map((item, i) => (
-                  <div key={i} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "14px 18px", display: "flex", alignItems: "center", gap: 16, backdropFilter: "blur(5px)" }}>
-                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff4d4d", flexShrink: 0 }} />
+                  <div key={i} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, padding: "18px 24px", display: "flex", alignItems: "center", gap: 20 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444", flexShrink: 0 }} />
                     <div>
-                      <div style={{ color: COLORS.white, fontSize: 14, fontWeight: 600 }}>{item.pain}</div>
-                      <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginTop: 2 }}>{item.impact}</div>
+                      <div style={{ color: COLORS.white, fontSize: 15, fontWeight: 700 }}>{item.pain}</div>
+                      <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, marginTop: 4 }}>{item.impact}</div>
                     </div>
                   </div>
                 ))}
@@ -170,22 +184,27 @@ const HomePage = ({ setActive }) => {
         </div>
 
         {/* ── Features Section ── */}
-        <div style={{ padding: "100px 80px", background: "rgba(10, 25, 47, 0.9)", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+        <div className="section-padding" style={{ padding: "100px 80px", background: "rgba(10, 25, 47, 0.95)", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <div style={{ color: COLORS.teal, fontSize: 12, fontWeight: 700, letterSpacing: "1.5px", marginBottom: 12 }}>WHAT WE BUILT</div>
-              <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 42, fontWeight: 800, color: COLORS.white, margin: 0 }}>Three modules. One solution.</h2>
+            <div style={{ textAlign: "center", marginBottom: 60 }}>
+              <div style={{ color: COLORS.teal, fontSize: 13, fontWeight: 700, letterSpacing: "1px", marginBottom: 12 }}>SYSTEM ARCHITECTURE</div>
+              <h2 style={{ fontSize: 38, fontWeight: 700, color: COLORS.white, margin: 0 }}>Integrated Healthcare Modules</h2>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+            <div className="grid-three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
               {FEATURES.map((f, i) => (
-                <div key={i} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "28px 24px", backdropFilter: "blur(10px)" }}>
-                  <div style={{ fontSize: 32, marginBottom: 14 }}>{f.icon}</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.white, marginBottom: 8 }}>{f.title}</div>
-                  <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.7 }}>{f.desc}</div>
+                <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 6, padding: "32px 24px", transition: "transform 0.3s ease" }}>
+                  <div style={{ fontSize: 32, marginBottom: 16 }}>{f.icon}</div>
+                  <div style={{ fontSize: 17, fontWeight: 700, color: COLORS.white, marginBottom: 10 }}>{f.title}</div>
+                  <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>{f.desc}</div>
                 </div>
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: "40px", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
+          © 2026 MediQueue Management Systems. All Rights Reserved.
         </div>
 
       </div>
